@@ -9,7 +9,8 @@
     "start:dev": "ts-node-dev src/index.ts --respawn",
     "lint": "eslint ./src ./test --ext .ts",
     "lint:fix": "eslint ./src ./test --ext .ts --fix",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:functional": "jest --projects ./test --runInBand"
   },
   "keywords": [
     "nodejs",
@@ -22,11 +23,16 @@
     "module-alias": "^2.2.2"
   },
   "devDependencies": {
+    "@types/jest": "^26.0.12",
     "@types/module-alias": "^2.0.0",
     "@types/node": "^14.6.2",
+    "@types/supertest": "^2.0.10",
     "@typescript-eslint/eslint-plugin": "^4.0.1",
     "@typescript-eslint/parser": "^4.0.1",
     "eslint": "^7.8.1",
+    "jest": "^26.4.2",
+    "supertest": "^4.0.2",
+    "ts-jest": "^26.3.0",
     "ts-node-dev": "^1.0.0-pre.61",
     "typescript": "^4.0.2"
   }
