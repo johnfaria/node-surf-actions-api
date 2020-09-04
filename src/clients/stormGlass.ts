@@ -1,6 +1,6 @@
-import { AxiosStatic } from 'axios';
 import { InternalError } from '@src/util/errors/internal-error';
-import config, { IConfig } from 'config'
+import config, { IConfig } from 'config';
+import * as HTTPUtil from '@src/util/request';
 
 export interface StormGlassPointSource {
   [key: string]: number;
@@ -18,7 +18,7 @@ export interface StormGlassPoint {
 }
 
 export interface StormGlassForecastResponse {
-  hours: StormGlassPoint[]; 
+  hours: StormGlassPoint[];
 }
 
 export interface ForecastPoint {
@@ -47,7 +47,9 @@ export class StormGlassResponseError extends InternalError {
   }
 }
 
-const stormGlassResourceConfig: IConfig = config.get('App.resources.StormGlass')
+const stormGlassResourceConfig: IConfig = config.get(
+  'App.resources.StormGlass'
+);
 
 export class ResponseRequestError {}
 
@@ -57,12 +59,16 @@ export class StormGlass {
 
   readonly stormGlassAPISource = 'noaa';
 
-  constructor(protected request: AxiosStatic) {}
+  constructor(protected request = new HTTPUtil.Request()) {}
 
-  public async fetchPoints(lat: number, lng: number): Promise<{}> {
+  public async fetchPoints(lat: number, lng: number): Promise<ForecastPoint[]> {
     try {
       const response = this.request.get<StormGlassForecastResponse>(
-        `${stormGlassResourceConfig.get('apiUrl')}weather/point?params=${this.stormGlassAPIParams}&source=${this.stormGlassAPISource}&end=1592113802&lat=${lat}&lng=${lng}`,
+        `${stormGlassResourceConfig.get('apiUrl')}weather/point?params=${
+          this.stormGlassAPIParams
+        }&source=${
+          this.stormGlassAPISource
+        }&end=1592113802&lat=${lat}&lng=${lng}`,
         {
           headers: {
             Authorization: stormGlassResourceConfig.get('apiToken'),
@@ -72,7 +78,7 @@ export class StormGlass {
 
       return this.normalizeResponse((await response).data);
     } catch (err) {
-      if (err.response && err.response.status) {
+      if (HTTPUtil.Request.isRequestError(err)) {
         throw new StormGlassResponseError(
           `Error: ${JSON.stringify(err.response.data)} Code: ${
             err.response.status
