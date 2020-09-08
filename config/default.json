@@ -1,12 +1,13 @@
 {
   "App": {
+    "port": "3000",
     "database": {
       "mongoUrl": "mongodb+srv://johnfaria:203010@cluster0.6yirf.gcp.mongodb.net/surf-forecast?retryWrites=true&w=majority"
     },
     "resources": {
       "StormGlass": {
         "apiUrl": "https://api.stormglass.io/v2",
-        "apiToken": "do-not-hard-code"
+        "apiToken": "..."
       }
     }
   }

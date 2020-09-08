@@ -1,92 +1,91 @@
-import { InternalError } from '@src/util/errors/internal-error';
-import config, { IConfig } from 'config';
-import * as HTTPUtil from '@src/util/request';
+import { InternalError } from '@src/util/errors/internal-error'
+import config, { IConfig } from 'config'
+import * as HTTPUtil from '@src/util/request'
 
 export interface StormGlassPointSource {
-  [key: string]: number;
+  [key: string]: number
 }
 
 export interface StormGlassPoint {
-  readonly time: string;
-  readonly waveHeight: StormGlassPointSource;
-  readonly waveDirection: StormGlassPointSource;
-  readonly swellDirection: StormGlassPointSource;
-  readonly swellHeight: StormGlassPointSource;
-  readonly swellPeriod: StormGlassPointSource;
-  readonly windDirection: StormGlassPointSource;
-  readonly windSpeed: StormGlassPointSource;
+  readonly time: string
+  readonly waveHeight: StormGlassPointSource
+  readonly waveDirection: StormGlassPointSource
+  readonly swellDirection: StormGlassPointSource
+  readonly swellHeight: StormGlassPointSource
+  readonly swellPeriod: StormGlassPointSource
+  readonly windDirection: StormGlassPointSource
+  readonly windSpeed: StormGlassPointSource
 }
 
 export interface StormGlassForecastResponse {
-  hours: StormGlassPoint[];
+  hours: StormGlassPoint[]
 }
 
 export interface ForecastPoint {
-  time: string;
-  waveHeight: number;
-  waveDirection: number;
-  swellDirection: number;
-  swellHeight: number;
-  swellPeriod: number;
-  windDirection: number;
-  windSpeed: number;
+  time: string
+  waveHeight: number
+  waveDirection: number
+  swellDirection: number
+  swellHeight: number
+  swellPeriod: number
+  windDirection: number
+  windSpeed: number
 }
 
 export class ClientRequestError extends InternalError {
   constructor(message: string) {
-    const InternalMessage = `Unexpected error when trying to communicate to StormGlass:`;
-    super(`${InternalMessage} ${message}`);
+    const InternalMessage = `Unexpected error when trying to communicate to StormGlass:`
+    super(`${InternalMessage} ${message}`)
   }
 }
 
 export class StormGlassResponseError extends InternalError {
   constructor(message: string) {
     const internalMessage =
-      'Unexpected error returned by the StormGlass service';
-    super(`${internalMessage}: ${message}`);
+      'Unexpected error returned by the StormGlass service'
+    super(`${internalMessage}: ${message}`)
   }
 }
 
-const stormGlassResourceConfig: IConfig = config.get(
-  'App.resources.StormGlass'
-);
+const stormglassResourceConfig: IConfig = config.get('App.resources.StormGlass')
 
 export class ResponseRequestError {}
 
 export class StormGlass {
   readonly stormGlassAPIParams =
-    'swellDirection,swellHeight,swellPeriod,waveDirection,waveHeight,windDirection,windSpeed';
+    'swellDirection,swellHeight,swellPeriod,waveDirection,waveHeight,windDirection,windSpeed'
 
-  readonly stormGlassAPISource = 'noaa';
+  readonly stormGlassAPISource = 'noaa'
 
   constructor(protected request = new HTTPUtil.Request()) {}
 
   public async fetchPoints(lat: number, lng: number): Promise<ForecastPoint[]> {
     try {
-      const response = this.request.get<StormGlassForecastResponse>(
-        `${stormGlassResourceConfig.get('apiUrl')}weather/point?params=${
+      const response = await this.request.get<StormGlassForecastResponse>(
+        `${stormglassResourceConfig.get(
+          'apiUrl'
+        )}/weather/point?lat=${lat}&lng=${lng}&params=${
           this.stormGlassAPIParams
-        }&source=${
-          this.stormGlassAPISource
-        }&end=1592113802&lat=${lat}&lng=${lng}`,
+        }&source=${this.stormGlassAPISource}`,
         {
           headers: {
-            Authorization: stormGlassResourceConfig.get('apiToken'),
+            Authorization: stormglassResourceConfig.get('apiToken'),
           },
         }
-      );
-
-      return this.normalizeResponse((await response).data);
+      )
+      return this.normalizeResponse(response.data)
     } catch (err) {
+      /**
+       * This is handling the Axios errors specifically
+       */
       if (HTTPUtil.Request.isRequestError(err)) {
         throw new StormGlassResponseError(
           `Error: ${JSON.stringify(err.response.data)} Code: ${
             err.response.status
           }`
-        );
+        )
       }
-
-      throw new ClientRequestError(err.message);
+      throw new ClientRequestError(err.message)
     }
   }
 
@@ -102,7 +101,7 @@ export class StormGlass {
       waveHeight: point.waveHeight[this.stormGlassAPISource],
       windDirection: point.windDirection[this.stormGlassAPISource],
       windSpeed: point.windSpeed[this.stormGlassAPISource],
-    }));
+    }))
   }
 
   private isValidPoint(point: Partial<StormGlassPoint>): boolean {
@@ -115,6 +114,6 @@ export class StormGlass {
       point.waveHeight?.[this.stormGlassAPISource] &&
       point.windDirection?.[this.stormGlassAPISource] &&
       point.windSpeed?.[this.stormGlassAPISource]
-    );
+    )
   }
 }
